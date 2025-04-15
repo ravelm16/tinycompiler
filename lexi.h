@@ -12,14 +12,18 @@ typedef enum {
     TOKEN_DIV,
     TOKEN_LPAREN,
     TOKEN_RPAREN,
+    TOKEN_WHILE,
+    TOKEN_IF,
+    TOKEN_EQUAL,
     TOKEN_END,
     TOKEN_ERROR,
+    
 } tokenType;
 
 
 typedef struct {
     tokenType type;
-    char value;
+    char value[32];
     int position;
 } Token;
 
