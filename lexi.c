@@ -94,7 +94,9 @@ void getNextToken(FILE *fp) {
     
     
     else if (isdigit(character)) {
+        char checker[10]={0};
         currentToken->type = TOKEN_NUM;
+        
     } else {
         switch (character) {
             case '+': currentToken->type = TOKEN_ADD; break;
@@ -103,7 +105,6 @@ void getNextToken(FILE *fp) {
             case '/': currentToken->type = TOKEN_DIV; break;
             case '(': currentToken->type = TOKEN_LPAREN; break;
             case ')': currentToken->type = TOKEN_RPAREN; break;
-            
             default:  currentToken->type = TOKEN_ERROR; break;
         }
     }
