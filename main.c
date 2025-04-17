@@ -6,10 +6,16 @@
 #include "lexi.h"
 #include "global.h"
 
-int main() {
-
-
-    FILE *file = fopen("example.txt", "r");
+int main(int argc, char *argv[]) {
+    Token storeToken[256]={0}; /*declaring token stream here*/
+    int tokenCount = 0;
+    if (argc < 2)
+    {
+        printf("Please give source code input\n");
+        return 0;
+    }
+    
+    FILE *file = fopen(argv[1], "r");
 
     if (file == NULL) {
         printf("Error: Cannot open file.\n");
@@ -22,7 +28,6 @@ int main() {
             break;
         }
     }
-
 
     printToken();
     fclose(file);

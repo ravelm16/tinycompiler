@@ -7,6 +7,7 @@
 #include "lexi.h"
 
 
+
 const char* tokenDisplay(tokenType type) {
     switch (type) {
         case TOKEN_ID:    return "ID";
@@ -17,26 +18,34 @@ const char* tokenDisplay(tokenType type) {
         case TOKEN_DIV:   return "DIV";
         case TOKEN_LPAREN:return "LPAREN";
         case TOKEN_RPAREN:return "RPAREN";
-        case TOKEN_WHILE:return 'WHILE';
-        case TOKEN_EQUAL:return 'EQUAL';
-        case TOKEN_IF:return 'IF';
+        case TOKEN_WHILE:return "WHILE";
+        case TOKEN_EQUAL:return "EQUAL";
+        case TOKEN_IF:return "IF";
+        case TOKEN_ELSE: return "ELSE";
+        case TOKEN_DO: return "DO";
+        case TOKEN_THEN: return "THEN";
         case TOKEN_END:   return "END";
         case TOKEN_ERROR: return "ERROR";
+        case TOKEN_DECLARE: return "DECLARE";
         default:         return "UNKNOWN";
     }
 }
 
 
 
-Token storeToken[256]={0};
-int tokenCount = 0;
+
 int positionChar = 1;
+int lineChar = 1;
 
 int skipWhiteSpace(FILE *fp) {
     int character;
     while ((character = fgetc(fp)) != EOF) {
         if (!isspace(character)) {
       
+            return character;
+        } else if (character == '\n'){
+            lineChar++;
+            positionChar = 1;
             return character;
         }
     }
@@ -48,6 +57,7 @@ void getNextToken(FILE *fp) {
     Token *currentToken = &storeToken[tokenCount];
     currentToken->value[32] = '\0';
     currentToken->position = positionChar;
+    currentToken->line = lineChar;
 
     int character = skipWhiteSpace(fp);
 
@@ -57,11 +67,13 @@ void getNextToken(FILE *fp) {
         return;
     }
 
-    currentToken->value = (char)character;
+    if (character == '\n'){
+        return;
+    }
     positionChar++;  
 
     if (isalpha(character)) {
-        char checker[10] = {0};
+        char checker[32] = {0};
         int i = 0;
 
         while(isalpha(character)&& character !=EOF && !isspace(character))
@@ -83,38 +95,74 @@ void getNextToken(FILE *fp) {
         else if (strcmp(checker, "while")==0){
             currentToken->type = TOKEN_WHILE;
         }
-
+         else if (strcmp(checker, "do")==0)
+         {
+            currentToken->type = TOKEN_DO;
+         }
+         
+         else if (strcmp(checker, "then")==0){
+            currentToken->type = TOKEN_THEN;
+         }
+         else if (strcmp(checker, "else")== 0){
+            currentToken->type = TOKEN_ELSE;
+         }
+         else if (strcmp(checker, "int") == 0 | strcmp(checker, "char") == 0)
+         {
+            currentToken->type = TOKEN_DECLARE;
+         }
+         
         else currentToken->type = TOKEN_ID;
         
-        strncpy(currentToken->value, checker, sizeof((currentToken->value)-1));
-        currentToken->value[sizeof((currentToken->value)-1)] = '\0';
+        strncpy(currentToken->value, checker, 6);
+        currentToken->value[6] = '\0';
     } 
     
     
     
     
-    else if (isdigit(character)) {
-        char checker[10]={0};
+    else if (isdigit(character)) 
+    {
+        char checker[32]={0};
+        int i = 0;
+
+        while(isdigit(character) && character != EOF && !isspace(character))
+        {
+            checker[i]= (char)character;
+            i++;
+            character = fgetc(fp);
+        }
+        if(character != EOF){
+            ungetc(character, fp);
+
+        }
         currentToken->type = TOKEN_NUM;
+        strncpy(currentToken->value, checker, 6);
+        currentToken->value[6] = '\0';
         
-    } else {
-        switch (character) {
+    } 
+    else 
+    {
+        switch (character)
+        {
             case '+': currentToken->type = TOKEN_ADD; break;
             case '-': currentToken->type = TOKEN_SUB; break;
             case '*': currentToken->type = TOKEN_MULTI; break;
             case '/': currentToken->type = TOKEN_DIV; break;
             case '(': currentToken->type = TOKEN_LPAREN; break;
             case ')': currentToken->type = TOKEN_RPAREN; break;
+            case '=': currentToken->type = TOKEN_EQUAL; break;
             default:  currentToken->type = TOKEN_ERROR; break;
         }
+        currentToken->value[0] = (char)character;
+        currentToken->value[1]='\0';
     }
     tokenCount++;
 }
 
 void printToken() {
     for (int i = 0; i < tokenCount; i++) {
-        printf("%d | %s | %c\n",
-               storeToken[i].position,
+        printf("%d | %d | %s | %s\n",
+               storeToken[i].line, storeToken[i].position,
                tokenDisplay(storeToken[i].type),
                storeToken[i].value);
     }
