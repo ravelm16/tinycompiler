@@ -21,19 +21,36 @@ typedef enum {
     TOKEN_END,
     TOKEN_ERROR,
     TOKEN_DECLARE,
+    TOKEN_LESS,
+    TOKEN_GREAT,
     
 } tokenType;
 
+typedef enum {
+    NODE_PROGRAM,
+    NODE_DECL_STMT,
+    NODE_EXPR_STMT,
+    NODE_WHILE_STMT,
+    NODE_EXP_STMT,
+    NODE_EXP,
+    NODE_VAR,
+    NODE_COND, 
+} nodeType;
 
 typedef struct {
     tokenType type;
     char value[32];
     int position;
     int line;
+    nodeType node;
 } Token;
 
-extern Token storeToken[256]; 
-extern int tokenCount;  
+extern Token* currentToken;
+extern Token storeToken[256]; /*this is an extern global struct array called storeToken belonging in a header called global.h*/
+extern int tokenCount; 
+
+
+
 
 
 #endif

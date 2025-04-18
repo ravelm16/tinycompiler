@@ -27,15 +27,19 @@ const char* tokenDisplay(tokenType type) {
         case TOKEN_END:   return "END";
         case TOKEN_ERROR: return "ERROR";
         case TOKEN_DECLARE: return "DECLARE";
+        case TOKEN_LESS: return "LESS";
+        case TOKEN_GREAT: return "GREAT";
         default:         return "UNKNOWN";
     }
 }
 
 
 
-
+ 
 int positionChar = 1;
 int lineChar = 1;
+Token storeToken[256]={0}; /*declaring token stream here, allocating memory for the struct array*/
+int tokenCount = 0;
 
 int skipWhiteSpace(FILE *fp) {
     int character;
@@ -53,11 +57,12 @@ int skipWhiteSpace(FILE *fp) {
 }
 
 void getNextToken(FILE *fp) {
-
-    Token *currentToken = &storeToken[tokenCount];
+    
+    Token* currentToken = &storeToken[tokenCount];
     currentToken->value[32] = '\0';
     currentToken->position = positionChar;
     currentToken->line = lineChar;
+    
 
     int character = skipWhiteSpace(fp);
 
@@ -151,6 +156,8 @@ void getNextToken(FILE *fp) {
             case '(': currentToken->type = TOKEN_LPAREN; break;
             case ')': currentToken->type = TOKEN_RPAREN; break;
             case '=': currentToken->type = TOKEN_EQUAL; break;
+            case '<': currentToken->type = TOKEN_LESS; break;
+            case '>': currentToken->type = TOKEN_GREAT; break;
             default:  currentToken->type = TOKEN_ERROR; break;
         }
         currentToken->value[0] = (char)character;
@@ -161,7 +168,7 @@ void getNextToken(FILE *fp) {
 
 void printToken() {
     for (int i = 0; i < tokenCount; i++) {
-        printf("%d | %d | %s | %s\n",
+        printf("<%d | %d | %s | %s>\n",
                storeToken[i].line, storeToken[i].position,
                tokenDisplay(storeToken[i].type),
                storeToken[i].value);

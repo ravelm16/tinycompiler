@@ -5,10 +5,10 @@
 #include <stdbool.h>
 #include "lexi.h"
 #include "global.h"
+#include "parser.h"
 
 int main(int argc, char *argv[]) {
-    Token storeToken[256]={0}; /*declaring token stream here*/
-    int tokenCount = 0;
+
     if (argc < 2)
     {
         printf("Please give source code input\n");
