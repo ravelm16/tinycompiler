@@ -102,39 +102,79 @@ Atree* createStatement() {
 }
 
 
-Atree* vari(){
-    if(currentToken->type ==TOKEN_LPAREN){
+Atree* vari() {
+    // Handle parentheses case
+    if (currentToken->type == TOKEN_LPAREN) {
         expect(TOKEN_LPAREN);
-        Atree* exp = NULL;//for later on expression
+        Atree* exp = NULL;  // Placeholder for future expression handling
         expect(TOKEN_RPAREN);
         return exp;
-
-    } else if (currentToken->type == TOKEN_ID){
+    }
+    // Handle identifier case
+    else if (currentToken->type == TOKEN_ID) {
         Atree* variable = malloc(sizeof(Atree));
-        if(!variable){
-            fprintf(stderr,"memory allocation failed");
+        if (!variable) {
+            fprintf(stderr, "Error: Memory allocation failed in vari() for ID\n");
             exit(EXIT_FAILURE);
         }
-        memset(variable, 0, sizeof(Atree));
+        memset(variable, 0, sizeof(Atree));  // Zero-initialize the entire struct
+        
         variable->type = NODE_VAR;
         variable->typeToken = currentToken->type;
-        variable->data.name = malloc(strlen(currentToken->value)+1);
-        strcpy(variable->data.name, currentToken->value);
+        
+        // Safer string copying
+        if (currentToken->value) {
+            variable->data.name = strdup(currentToken->value);
+            if (!variable->data.name) {
+                fprintf(stderr, "Error: Failed to duplicate string in vari()\n");
+                free(variable);
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            fprintf(stderr, "Error: Token value is NULL in vari()\n");
+            free(variable);
+            exit(EXIT_FAILURE);
+        }
+        
         expect(TOKEN_ID);
         return variable;
-
-    } else if (currentToken->type == TOKEN_NUM){
+    }
+    // Handle number case
+    else if (currentToken->type == TOKEN_NUM) {
         Atree* variable = malloc(sizeof(Atree));
-        variable->type = NODE_VAR;
+        if (!variable) {
+            fprintf(stderr, "Error: Memory allocation failed in vari() for NUM\n");
+            exit(EXIT_FAILURE);
+        }
+        memset(variable, 0, sizeof(Atree));  // Zero-initialize
         
+        variable->type = NODE_VAR;
         variable->typeToken = currentToken->type;
-        variable->data.name = malloc(strlen(currentToken->value)+1);
-        strcpy(variable->data.name, currentToken->value);
+        
+        // Handle numeric value
+        if (currentToken->value) {
+            variable->data.name = strdup(currentToken->value);
+            if (!variable->data.name) {
+                fprintf(stderr, "Error: Failed to duplicate number string\n");
+                free(variable);
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            fprintf(stderr, "Error: Numeric token has NULL value\n");
+            free(variable);
+            exit(EXIT_FAILURE);
+        }
+        
         expect(TOKEN_NUM);
         return variable;
     }
+    // Handle unexpected token case
+    else {
+        fprintf(stderr, "Error: Unexpected token %s in vari()\n", 
+                tokenDisplay(currentToken->type));
+        exit(EXIT_FAILURE);
+    }
 }
-
 
 
 Atree* declare_statement() {
@@ -170,37 +210,44 @@ Atree* declare_statement() {
     return statement;
 }
 
-
-Atree* expression_stmt(){
-
+Atree* expression_stmt() {
     Atree* node = malloc(sizeof(Atree));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    memset(node, 0, sizeof(Atree));
     node->type = NODE_EXP_STMT;
+    
     node->left = vari();
     expect(TOKEN_EQUAL);
+    
     node->right = expressionP();
     return node;
-
-
 }
 
-Atree* expressionP(){
-    
+Atree* expressionP() {
     Atree* exp = vari();
-    if(currentToken->type == TOKEN_SUB || currentToken->type == TOKEN_ADD || 
-        currentToken->type == TOKEN_MULTI || currentToken->type == TOKEN_DIV){
-
-            Atree* expression = malloc(sizeof(Atree));
-            expression->type = NODE_EXP;
-            expression->data.op = currentToken->value;
-            expect(currentToken->type);
-            expression->left = exp;
-            expression->right = expressionP();
-            return expression;
-        
-        }
-        return exp;
     
-
+    if (currentToken->type == TOKEN_SUB || currentToken->type == TOKEN_ADD || 
+        currentToken->type == TOKEN_MULTI || currentToken->type == TOKEN_DIV) {
+        
+        Atree* expression = malloc(sizeof(Atree));
+        if (!expression) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(EXIT_FAILURE);
+        }
+        memset(expression, 0, sizeof(Atree));
+        
+        expression->type = NODE_EXP;
+        expression->data.op = strdup(currentToken->value); // Copy the operator
+        expect(currentToken->type);
+        
+        expression->left = exp;
+        expression->right = expressionP();
+        return expression;
+    }
+    return exp;
 }
 
 Atree* if_stmt(){
@@ -284,48 +331,71 @@ void pushStatement(Atree** head, Atree* statement) {
 
 
 void printTree(Atree* Root, int level) {
+
     if (Root == NULL) return;
 
     // Print indentation based on level
-    for (int i = 0; i < level; i++) {
+    int i = 0;
+    while(i<level-1){
+
         printf("  ");
+        i++;
     }
 
-    // Print node type and additional information
+
+
+
+    
     switch (Root->type) {
+
         case NODE_PROGRAM:
-            printf("Program\n");
+    
             break;
         case NODE_DECL_STMT:
-            printf("Declaration Statement\n");
+            printf("|--");
+            printf(">Declaration Statement\n");
+            
             break;
         case NODE_IF_STMT:
-            printf("If Statement\n");
+            printf("|--");
+            printf(">If Statement\n");
+            
             break;
         case NODE_WHILE_STMT:
-            printf("While Statement\n");
+        printf("|--");
+            printf(">While Statement\n");
+            
             break;
         case NODE_EXP_STMT:
-            printf("Expression Statement\n");
+        printf("|--");
+            printf(">Expression Statement\n");
+            
             break;
         case NODE_EXP:
-            printf("Expression: Operator '%s'\n", Root->data.op);
+        printf("|--");
+            printf(">Expression: Operator '%s'\n", Root->data.op);
+            
             break;
         case NODE_VAR:
             if (Root->typeToken == TOKEN_ID) {
-                printf("Variable: %s\n", Root->data.name);
+                printf("|--");
+                printf(">Variable: %s\n", Root->data.name);
+                
             } else if (Root->typeToken == TOKEN_NUM) {
-                printf("Number: %s\n", Root->data.name);
+                printf("|--");
+                printf(">Number: %s\n", Root->data.name);
+                
             }
             break;
         case NODE_COND:
-            printf("Condition: Operator '%s'\n", Root->data.op);
+        printf("|--");
+            printf(">Condition: Operator '%s'\n", Root->data.op);
             break;
         default:
-            printf("Unknown Node Type\n");
+        printf("|--");
+            printf(">Unknown Node Type\n");
     }
 
-    // Recursively print children
     if (Root->left != NULL) {
         printTree(Root->left, level + 1);
     }
@@ -338,8 +408,7 @@ void printTree(Atree* Root, int level) {
     if (Root->child != NULL) {
         printTree(Root->child, level + 1);
     }
-    
-    // Print siblings at the same level
+        
     if (Root->sibling != NULL) {
         printTree(Root->sibling, level);
     }

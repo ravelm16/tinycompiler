@@ -44,19 +44,25 @@ int main(int argc, char *argv[]) {
     Atree* myProgram = createRoot();
     while (true) {
         getNextToken(file);
-        if (currentToken == NULL || currentToken->type == TOKEN_END || tokenCount >= 256)
-            break;
+        if (currentToken->type == TOKEN_END) break;
         
         Atree* currentStatement = generateStatement();
-        pushStatement(&myProgram->child, currentStatement);
+        if (!currentStatement) {
+            fprintf(stderr, "Failed to generate statement\n");
+            break;
+        }
+        
+        pushStatement(&myProgram, currentStatement);
+        
+        if (tokenCount >= 256) break;
     }
-
 
 
    
 
     printToken();
     printf("\nParse Tree:\n");
+    printf("Program\n");
     printTree(myProgram, 0);
     freeAST(myProgram);
     fclose(file);
