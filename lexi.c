@@ -8,7 +8,8 @@
 
 
 
-const char* tokenDisplay(tokenType type) {
+
+char* tokenDisplay(tokenType type) {
     switch (type) {
         case TOKEN_ID:    return "ID";
         case TOKEN_NUM:   return "NUM";
@@ -33,14 +34,6 @@ const char* tokenDisplay(tokenType type) {
     }
 }
 
-
-
- 
-int positionChar = 1;
-int lineChar = 1;
-Token storeToken[256]={0}; /*declaring token stream here, allocating memory for the struct array*/
-int tokenCount = 0;
-
 int skipWhiteSpace(FILE *fp) {
     int character;
     while ((character = fgetc(fp)) != EOF) {
@@ -58,8 +51,8 @@ int skipWhiteSpace(FILE *fp) {
 
 void getNextToken(FILE *fp) {
     
-    Token* currentToken = &storeToken[tokenCount];
-    currentToken->value[32] = '\0';
+    currentToken = &storeToken[tokenCount]; //declaring currentToken
+    memset(currentToken->value, 0, sizeof(currentToken->value));
     currentToken->position = positionChar;
     currentToken->line = lineChar;
     
